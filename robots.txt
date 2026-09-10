@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://maybad-alr.github.io/aruqami/sitemap.xml

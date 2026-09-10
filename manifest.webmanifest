@@ -1,0 +1,24 @@
+{
+  "name": "أرقامي — حاسبات مالية وعملية دقيقة بالعربي",
+  "short_name": "أرقامي",
+  "description": "حاسبات مالية وعملية بالعربية: مكافأة نهاية الخدمة، الزكاة، ضريبة القيمة المضافة، التمويل العقاري، الرواتب، الصحة، والمواريث — بنتائج فورية وشرح مبني على الأنظمة الرسمية.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0a1f24",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

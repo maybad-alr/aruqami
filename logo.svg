@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" width="220" height="64" role="img" aria-label="أرقامي">
+  <rect x="0" y="8" width="48" height="48" rx="12" fill="#0f7a6c"/>
+  <g transform="translate(24,32) scale(1)" color="#ffffff">
+    <g fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-9 9h18"/><path d="M-6 9V3"/><path d="M0 9V-3"/><path d="M6 9V-9"/>
+    </g>
+  </g>
+  <text x="62" y="42" font-family="Rubik, IBM Plex Sans Arabic, Tahoma, sans-serif" font-size="28" font-weight="700" fill="#0c1a1f">أرقامي</text>
+</svg>
