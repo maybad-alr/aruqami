@@ -75,6 +75,13 @@
           { label: 'أصل مبلغ التمويل', value: principal, format: 'currency' },
           { label: 'إجمالي الأرباح', value: res.profit, format: 'currency', tone: 'accent' }
         ],
+        tables: [{
+          title: 'جدول السداد السنوي',
+          columns: ['السنة', 'من أصل المبلغ (ر.س)', 'الأرباح (ر.س)', 'إجمالي المدفوع (ر.س)', 'الرصيد المتبقي (ر.س)'],
+          rows: AQ.amortization(principal, rate, months, method).map(function (y) {
+            return [y.year, AQ.money0(y.principal), AQ.money0(y.profit), AQ.money0(y.payment), AQ.money0(y.closing)];
+          })
+        }],
         notes: notes
       };
     }

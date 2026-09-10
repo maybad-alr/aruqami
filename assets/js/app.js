@@ -217,6 +217,50 @@
     return out.join(' و ');
   };
 
+  /* جدول سداد سنوي: أصل الدين والأرباح والرصيد المتبقي لكل سنة */
+  AQ.amortization = function (principal, annualRate, months, method) {
+    var rows = [];
+    var rate = Number(annualRate) || 0;
+    var n = Math.max(1, Math.round(Number(months) || 1));
+    var r = rate / 100 / 12;
+    var isFlat = method === 'flat';
+    var flatProfit = principal * (rate / 100) * (n / 12);
+    var pmt = isFlat
+      ? (principal + flatProfit) / n
+      : (r === 0 ? principal / n : principal * r / (1 - Math.pow(1 + r, -n)));
+
+    var bal = principal;
+    var yPrin = 0, yProfit = 0, yPay = 0;
+
+    for (var m = 1; m <= n; m++) {
+      var interest, pr;
+      if (isFlat) {
+        interest = flatProfit / n;
+        pr = pmt - interest;
+      } else {
+        interest = bal * r;
+        pr = pmt - interest;
+        if (pr > bal) pr = bal;
+      }
+      bal = Math.max(0, bal - pr);
+      yPrin += pr;
+      yProfit += interest;
+      yPay += pmt;
+
+      if (m % 12 === 0 || m === n) {
+        rows.push({
+          year: Math.ceil(m / 12),
+          principal: yPrin,
+          profit: yProfit,
+          payment: yPay,
+          closing: bal
+        });
+        yPrin = 0; yProfit = 0; yPay = 0;
+      }
+    }
+    return rows;
+  };
+
   /* ---------------- Calculator engine ---------------- */
   var registry = {};
   AQ.register = function (slug, definition) { registry[slug] = definition; };
@@ -299,6 +343,24 @@
       html += '</div></div>';
     }
 
+    if (result.tables && result.tables.length) {
+      result.tables.forEach(function (t) {
+        html += '<div class="result-table">';
+        html += '<div class="breakdown-title">' + AQ.escape(t.title) + '</div>';
+        html += '<div class="table-scroll"><table class="mini-table"><thead><tr>';
+        t.columns.forEach(function (c) { html += '<th>' + AQ.escape(c) + '</th>'; });
+        html += '</tr></thead><tbody>';
+        t.rows.forEach(function (row) {
+          html += '<tr>';
+          row.forEach(function (cell, i) {
+            html += '<td' + (i === 0 ? ' class="k"' : '') + '>' + AQ.escape(cell) + '</td>';
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table></div></div>';
+      });
+    }
+
     if (result.notes && result.notes.length) {
       html += '<div class="result-notes">';
       result.notes.forEach(function (n) {
@@ -312,6 +374,23 @@
     }
 
     container.innerHTML = html;
+  }
+
+  /* إظهار الحقول المرتبطة بالوضع المختار فقط */
+  function readMode(form) {
+    var sel = form.querySelector('select[data-field="mode"]');
+    if (sel) return sel.value;
+    var radio = form.querySelector('input[data-field="mode"]:checked');
+    return radio ? radio.value : null;
+  }
+
+  function updateVisibility(form) {
+    var mode = readMode(form);
+    form.querySelectorAll('.field[data-show-for]').forEach(function (field) {
+      var list;
+      try { list = JSON.parse(field.getAttribute('data-show-for')); } catch (e) { list = []; }
+      field.hidden = mode ? list.indexOf(mode) === -1 : false;
+    });
   }
 
   function initCalculator() {
@@ -329,6 +408,7 @@
     function compute() {
       var values = readForm(form);
       current.values = values;
+      updateVisibility(form);
       var result = null;
       try {
         result = def && def.compute ? def.compute(values) : null;
@@ -412,8 +492,25 @@
         else if (action === 'share') copyText(window.location.href, 'تم نسخ رابط النتيجة');
         else if (action === 'copy-link') copyText(window.location.href, 'تم نسخ الرابط');
         else if (action === 'copy-result') copyResult();
+        else if (action === 'save') saveCurrent();
       });
     });
+
+    function saveCurrent() {
+      var r = current.result;
+      var name = panel.getAttribute('data-calc-name') || document.title;
+      var summary = r && r.primary
+        ? (r.primary.label + ': ' + formatValue(r.primary.value, r.primary.format) +
+           (r.primary.unit ? ' ' + r.primary.unit : ''))
+        : 'حساب محفوظ';
+      AQ.saveCalculation({
+        slug: slug,
+        name: name,
+        summary: summary,
+        url: window.location.pathname + window.location.search
+      });
+      toast('تم حفظ الحساب في هذا الجهاز');
+    }
 
     function copyResult() {
       var r = current.result;
@@ -594,10 +691,140 @@
     });
   }
 
+  /* ---------------- Saved calculations (على جهاز الزائر) ---------------- */
+  var SAVED_KEY = 'aruqami-saved';
+
+  function readSaved() {
+    try { return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); } catch (e) { return []; }
+  }
+
+  function writeSaved(list) {
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(list.slice(0, 60))); } catch (e) {}
+  }
+
+  AQ.saveCalculation = function (entry) {
+    var list = readSaved();
+    var item = {
+      slug: entry.slug,
+      name: entry.name,
+      summary: entry.summary,
+      url: entry.url,
+      ts: Date.now()
+    };
+    list = list.filter(function (x) {
+      return !(x.slug === item.slug && x.url === item.url);
+    });
+    list.unshift(item);
+    writeSaved(list);
+  };
+
+  function initSavedPage() {
+    var host = doc.querySelector('[data-saved-list]');
+    if (!host) return;
+    var clearBtn = doc.querySelector('[data-saved-clear]');
+
+    function render() {
+      var list = readSaved();
+      if (!list.length) {
+        host.innerHTML = '<div class="empty-state">' +
+          '<p>لا توجد حسابات محفوظة بعد.</p>' +
+          '<p class="small muted-2">افتح أي حاسبة واضغط «حفظ الحساب» ليظهر هنا. الحفظ يتم على جهازك فقط.</p>' +
+          '</div>';
+        if (clearBtn) clearBtn.hidden = true;
+        return;
+      }
+      if (clearBtn) clearBtn.hidden = false;
+      host.innerHTML = list.map(function (item, i) {
+        return '<div class="saved-item">' +
+          '<div class="saved-main">' +
+            '<a class="saved-title" href="' + AQ.escape(item.url) + '">' + AQ.escape(item.name) + '</a>' +
+            '<span class="saved-summary">' + AQ.escape(item.summary) + '</span>' +
+            '<span class="saved-date">' + AQ.escape(AQ.formatDate(new Date(item.ts))) + '</span>' +
+          '</div>' +
+          '<div class="saved-actions">' +
+            '<a class="btn btn-ghost btn-sm" href="' + AQ.escape(item.url) + '">فتح</a>' +
+            '<button class="btn btn-quiet btn-sm" type="button" data-saved-remove="' + i + '">حذف</button>' +
+          '</div></div>';
+      }).join('');
+    }
+
+    host.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-saved-remove]');
+      if (!btn) return;
+      var list = readSaved();
+      list.splice(Number(btn.getAttribute('data-saved-remove')), 1);
+      writeSaved(list);
+      render();
+      toast('تم حذف الحساب');
+    });
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        writeSaved([]);
+        render();
+        toast('تم حذف كل الحسابات المحفوظة');
+      });
+    }
+
+    render();
+  }
+
+  /* ---------------- تقييم النتيجة ---------------- */
+  var FEEDBACK_KEY = 'aruqami-feedback';
+
+  function initFeedback() {
+    var box = doc.querySelector('[data-feedback]');
+    if (!box) return;
+    var slug = box.getAttribute('data-feedback');
+    var contact = box.getAttribute('data-contact') || 'contact.html';
+    var body = box.querySelector('[data-feedback-body]');
+
+    function showThanks(vote) {
+      body.innerHTML = vote === 'yes'
+        ? '<span class="feedback-thanks">شكرًا لك، سعدنا أنها أفادتك.</span>'
+        : '<span class="feedback-thanks">شكرًا لك. إن لاحظت خطأً في النتيجة <a href="' +
+          AQ.escape(contact) + '">راسلنا وسنراجعه</a>.</span>';
+    }
+
+    var stored = null;
+    try { stored = JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '{}')[slug]; } catch (e) {}
+    if (stored) { showThanks(stored); return; }
+
+    box.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-feedback-vote]');
+      if (!btn) return;
+      var vote = btn.getAttribute('data-feedback-vote');
+      try {
+        var all = JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '{}');
+        all[slug] = vote;
+        localStorage.setItem(FEEDBACK_KEY, JSON.stringify(all));
+      } catch (err) {}
+      showThanks(vote);
+    });
+  }
+
+  /* ---------------- زر العودة إلى الأعلى ---------------- */
+  function initBackToTop() {
+    var btn = doc.querySelector('[data-back-to-top]');
+    if (!btn) return;
+    function onScroll() {
+      btn.classList.toggle('is-visible', window.scrollY > 800);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    btn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      btn.blur();
+    });
+    onScroll();
+  }
+
   /* ---------------- Boot ---------------- */
   function boot() {
     initCalculator();
     initSearch();
+    initSavedPage();
+    initFeedback();
+    initBackToTop();
     doc.querySelectorAll('[data-year]').forEach(function (el) {
       el.textContent = String(new Date().getFullYear());
     });
