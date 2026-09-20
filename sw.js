@@ -1,5 +1,5 @@
 /* أرقامي — Service Worker: تخزين مؤقت للعمل دون اتصال */
-const CACHE = 'aruqami-4b85e37d44';
+const CACHE = 'aruqami-b655c801eb';
 const SHELL = ['./', './index.html', './assets/css/main.css', './assets/js/app.js',
   './manifest.webmanifest', './favicon.svg', './logo.svg', './calculators/end-of-service.html',
   './calculators/zakat.html', './calculators/vat.html'];

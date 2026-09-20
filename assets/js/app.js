@@ -645,18 +645,25 @@
       });
     }
 
-    function open() {
+    var lastTrigger = null;
+
+    function open(trigger) {
       if (dialog.hasAttribute('open')) return;
+      lastTrigger = trigger || doc.activeElement;
       dialog.setAttribute('open', '');
       input.value = '';
       render(search(''));
       setTimeout(function () { input.focus(); }, 30);
     }
 
-    function close() { dialog.removeAttribute('open'); }
+    function close() {
+      if (!dialog.hasAttribute('open')) return;
+      dialog.removeAttribute('open');
+      if (lastTrigger && lastTrigger.focus) { try { lastTrigger.focus(); } catch (e) {} }
+    }
 
     doc.querySelectorAll('[data-search-open]').forEach(function (btn) {
-      btn.addEventListener('click', function (e) { e.preventDefault(); open(); });
+      btn.addEventListener('click', function (e) { e.preventDefault(); open(btn); });
     });
 
     dialog.addEventListener('click', function (e) {
@@ -681,6 +688,24 @@
         return;
       }
       if (!isOpen) return;
+      if (e.key === 'Tab') {
+        /* حصر التركيز داخل النافذة المنبثقة */
+        var list = Array.prototype.filter.call(
+          dialog.querySelectorAll('a[href], input, button:not([disabled])'),
+          function (el) { return el.offsetParent !== null; }
+        );
+        if (list.length) {
+          var first = list[0];
+          var last = list[list.length - 1];
+          var active = doc.activeElement;
+          if (!dialog.contains(active) || (active === last && !e.shiftKey)) {
+            e.preventDefault(); first.focus();
+          } else if (active === first && e.shiftKey) {
+            e.preventDefault(); last.focus();
+          }
+        }
+        return;
+      }
       if (e.key === 'Escape') close();
       else if (e.key === 'ArrowDown') { e.preventDefault(); setActive(Math.min(activeIndex + 1, visible.length - 1)); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(Math.max(activeIndex - 1, 0)); }

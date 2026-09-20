@@ -18,7 +18,7 @@
   --line-2: #cfd6d7;
   --ink: #0c1a1f;
   --ink-2: #45585f;
-  --ink-3: #6d8087;
+  --ink-3: #5b6f76;
   --ink-4: #93a3a8;
 
   /* Brand: deep teal-green */
@@ -95,7 +95,7 @@
   --ink-4: #6d8386;
 
   --brand: #34b8a5;
-  --brand-strong: #2aa392;
+  --brand-strong: #2fb3a0;
   --brand-deep: #0b3d38;
   --brand-soft: #123330;
   --brand-soft-2: #16403b;
@@ -354,7 +354,7 @@ hr {
   border: 1px solid var(--line);
   background: var(--paper);
   border-radius: var(--r-sm);
-  color: var(--ink-3);
+  color: var(--ink-2);
   font-size: .88rem;
   cursor: pointer;
   min-width: 168px;
@@ -366,7 +366,7 @@ hr {
   font-size: .7rem;
   border: 1px solid var(--line);
   background: var(--paper-2);
-  color: var(--ink-4);
+  color: var(--ink-2);
   border-radius: var(--r-xs);
   padding: 1px 5px;
 }
@@ -1247,7 +1247,7 @@ hr {
 .article-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .article-body h3 { font-size: 1rem; line-height: 1.5; }
 .article-body p { font-size: .87rem; color: var(--ink-2); line-height: 1.65; flex: 1; }
-.article-meta { font-size: .78rem; color: var(--ink-3); display: flex; gap: 12px; align-items: center; }
+.article-meta { font-size: .78rem; color: var(--ink-2); display: flex; gap: 12px; align-items: center; }
 
 /* ---------- Pricing ---------- */
 .plans {
