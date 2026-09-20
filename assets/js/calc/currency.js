@@ -16,11 +16,11 @@
 
   var cache = {};
   var lastError = false;
-  var loading = false;
+  var inflight = {};
 
   function ensure(from, done) {
-    if (cache[from] || loading) { if (done) done(); return; }
-    loading = true;
+    if (cache[from] || inflight[from]) { if (done) done(); return; }
+    inflight[from] = true;
     fetch('https://open.er-api.com/v6/latest/' + encodeURIComponent(from))
       .then(function (r) { return r.json(); })
       .then(function (j) {
@@ -28,7 +28,7 @@
         else lastError = true;
       })
       .catch(function () { lastError = true; })
-      .then(function () { loading = false; if (done) done(); });
+      .then(function () { delete inflight[from]; if (done) done(); });
   }
 
   AQ.register('currency', {

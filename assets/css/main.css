@@ -1035,7 +1035,7 @@ hr {
   margin-bottom: 14px;
   flex-wrap: wrap;
 }
-.breadcrumb a { color: var(--ink-3); }
+.breadcrumb a { color: var(--ink-3); display: inline-flex; align-items: center; padding-block: 3px; }
 .breadcrumb a:hover { color: var(--brand); }
 .breadcrumb .sep { color: var(--ink-4); display: inline-flex; }
 .breadcrumb .sep .ico { width: 14px; height: 14px; }
@@ -1180,6 +1180,7 @@ hr {
   gap: 8px;
   font-size: .87rem;
   color: var(--ink-2);
+  padding-block: 4px;
 }
 .source-link:hover { color: var(--brand); }
 .source-link .ico { width: 15px; height: 15px; color: var(--ink-4); }
@@ -1336,14 +1337,14 @@ hr {
 .footer-brand p { font-size: .87rem; line-height: 1.7; max-width: 38ch; }
 .footer-brand .brand-mark { background: var(--brand); }
 
-.footer-col h4 {
+.footer-col h2 {
   font-size: .84rem;
   font-weight: 700;
   color: #fff;
   margin-bottom: 14px;
 }
 .footer-col ul { list-style: none; display: grid; gap: 9px; }
-.footer-col a { color: var(--band-ink-2); font-size: .87rem; }
+.footer-col a { color: var(--band-ink-2); font-size: .87rem; display: inline-block; padding-block: 3px; }
 .footer-col a:hover { color: #fff; }
 
 .footer-bottom {
@@ -1357,7 +1358,7 @@ hr {
   font-size: .82rem;
 }
 .footer-bottom-links { display: flex; flex-wrap: wrap; gap: 18px; }
-.footer-bottom a { color: var(--band-ink-2); }
+.footer-bottom a { color: var(--band-ink-2); display: inline-block; padding-block: 3px; }
 .footer-bottom a:hover { color: #fff; }
 
 /* ---------- Search dialog ---------- */

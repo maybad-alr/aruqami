@@ -1,5 +1,5 @@
 /* أرقامي — Service Worker: تخزين مؤقت للعمل دون اتصال */
-const CACHE = 'aruqami-v1';
+const CACHE = 'aruqami-4b85e37d44';
 const SHELL = ['./', './index.html', './assets/css/main.css', './assets/js/app.js',
   './manifest.webmanifest', './favicon.svg', './logo.svg', './calculators/end-of-service.html',
   './calculators/zakat.html', './calculators/vat.html'];
@@ -51,14 +51,19 @@ self.addEventListener('fetch', function (e) {
   /* الملفات الثابتة: الكاش أولًا مع تحديث في الخلفية */
   e.respondWith(
     caches.match(req).then(function (cached) {
-      if (cached) return cached;
-      return fetch(req).then(function (res) {
+      var network = fetch(req).then(function (res) {
         if (res && res.ok) {
           var copy = res.clone();
           caches.open(CACHE).then(function (c) { c.put(req, copy); });
         }
         return res;
       });
+      if (cached) {
+        /* نُعيد النسخة المخزّنة فورًا، ونحدّثها في الخلفية للزيارة القادمة */
+        network.catch(function () {});
+        return cached;
+      }
+      return network;
     })
   );
 });
